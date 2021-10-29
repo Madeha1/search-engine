@@ -21,8 +21,8 @@ declare function local:search-results()
 		for $magazine in search:search($q, $options)/search:result
 		return 
 		  <div>
-			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[0]/LastName/text()}</div>
-			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/year)}</div>    
+			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[1]/LastName/text()}</div>
+			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
 			 <div class="abstract">{fn:tokenize($magazine//Abstract, " ") [1 to 70]} ...&#160;
 				<a href="index.xqy?uri={xdmp:url-encode($magazine/@uri)}">[more]</a>
 			 </div>
@@ -35,16 +35,15 @@ declare function local:search-results()
 
 declare function local:default-results()
 {
-(for $magazine in /magazine 		 
-		order by $magazine//PubDate/year descending
+	(for $magazine in /PubmedArticle 		 
 		return (<div>
-			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[0]/LastName/text()}</div>
-			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/year)}</div>    
+			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[1]/LastName/text()}</div>
+			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
 			 <div class="abstract">{fn:tokenize($magazine//Abstract, " ") [1 to 70]} ...&#160;
 				<a href="index.xqy?uri={xdmp:url-encode($magazine/@uri)}">[more]</a>
 			</div>
 			</div>)	   	
-		)[1 to 10]
+	)[1 to 10]
 };
 
 declare function local:magazine-detail()
@@ -52,19 +51,10 @@ declare function local:magazine-detail()
 	let $uri := xdmp:get-request-field("uri")
 	let $magazine := fn:doc($uri) 
 	return <div>
-		<div class="magazine-large">"{$magazine/ts:top-song/ts:title/text()}"</div>
-		{if ($song/ts:top-song/ts:album/@uri) then <div class="albumimage"><img src="get-file.xqy?uri={xdmp:url-encode($song/ts:top-song/ts:album/@uri)}"/></div> else ()}
-		<div class="detailitem">#1 weeks: {fn:count($song/ts:top-song/ts:weeks/ts:week)}</div>	
-		<div class="detailitem">weeks: {fn:string-join(($song/ts:top-song/ts:weeks/ts:week), ", ")}</div>	
-		{if ($song/ts:top-song/ts:genres/ts:genre) then <div class="detailitem">genre: {fn:lower-case(fn:string-join(($song/ts:top-song/ts:genres/ts:genre), ", "))}</div> else ()}
-		{if ($song/ts:top-song/ts:artist/text()) then <div class="detailitem">artist: {$song/ts:top-song/ts:artist/text()}</div> else ()}
-		{if ($song/ts:top-song/ts:album/text()) then <div class="detailitem">album: {$song/ts:top-song/ts:album/text()}</div> else ()}
-		{if ($song/ts:top-song/ts:writers/ts:writer) then <div class="detailitem">writers: {fn:string-join(($song/ts:top-song/ts:writers/ts:writer), ", ")}</div> else ()}
-		{if ($song/ts:top-song/ts:producers/ts:producer) then <div class="detailitem">producers: {fn:string-join(($song/ts:top-song/ts:producers/ts:producer), ", ")}</div> else ()}
-		{if ($song/ts:top-song/ts:label) then <div class="detailitem">label: {$song/ts:top-song/ts:label}</div> else ()}
-		{if ($song/ts:top-song/ts:formats/ts:format) then <div class="detailitem">formats: {fn:string-join(($song/ts:top-song/ts:formats/ts:format), ", ")}</div> else ()} 
-		{if ($song/ts:top-song/ts:lengths/ts:length) then <div class="detailitem">lengths: {fn:string-join(($song/ts:top-song/ts:lengths/ts:length), ", ")}</div> else ()}
-		{if ($song/ts:top-song/ts:descr) then <div class="detailitem">{$song/ts:top-song/ts:descr}</div> else ()}
+		<div class="magazine-large">"{$magazine//Title/text()}"</div>
+		<div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
+		{if ($magazine//Author[1]/LastName/text()) then <div class="detailitem">Author: {$magazine//Author[1]/LastName/text()}</div> else ()}
+		{if ($magazine//Abstract) then <div class="detailitem">{$magazine//Abstract}</div> else ()}
 		</div>
 };
 
