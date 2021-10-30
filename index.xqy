@@ -3,38 +3,157 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
-	<transform-results apply="raw"/>
+	<transform-results apply="snippet">
+		<preferred-elements>
+			<element name="Abstract"/>
+		</preferred-elements>
+	</transform-results>
+
+	(: sort :)
+	<search:operator name="sort">
+		<search:state name="relevance">
+			<search:sort-order direction="descending">
+				<search:score/>
+			</search:sort-order>
+		</search:state>
+		<search:state name="newest">
+			<search:sort-order direction="descending" type="xs:date">
+                <path-index>PubmedArticle//PubDate/Year</path-index>
+			</search:sort-order>
+			<search:sort-order>
+				<search:score/>
+			</search:sort-order>
+		</search:state>
+		<search:state name="oldest">
+			<search:sort-order direction="ascending" type="xs:date">
+                <path-index>/PubmedArticle//PubDate/Year</path-index>
+			</search:sort-order>
+			<search:sort-order>
+				<search:score/>
+			</search:sort-order>
+		</search:state>
+		<search:state name="title">
+			<search:sort-order direction="ascending" type="xs:string">
+				<search:element  name="Title"/>
+			</search:sort-order>
+			<search:sort-order>
+				<search:score/>
+			</search:sort-order>
+		</search:state>
+	</search:operator>
   </options>;
 
 declare function local:result-controller() {
 	if(xdmp:get-request-field("q"))
 	then local:search-results()
+	(: when click More button :)
 	else if(xdmp:get-request-field("uri"))
 	then local:magazine-detail()  
+	(: No search or more :)
 	else local:default-results()
 };
 
-declare function local:search-results()
-{
-    let $q := xdmp:get-request-field("q")
+
+(: gets the current sort argument from the query string :)
+declare function local:get-sort($q){
+    fn:replace(fn:tokenize($q," ")[fn:contains(.,"sort")],"[()]","")
+};
+
+(: adds sort to the search query string :)
+declare function local:add-sort($q){
+    let $sortby := local:sort-controller()
+    return
+        if($sortby)
+        then
+            let $old-sort := local:get-sort($q)
+            let $q :=
+                if($old-sort)
+                then search:remove-constraint($q,$old-sort,$options)
+                else $q
+            return fn:concat($q," sort:",$sortby)
+        else $q
+}; 
+
+(: determines if the end-user set the sort through the drop-down or through editing the search text field or came from the advanced search form :)
+declare function local:sort-controller(){
+    if(xdmp:get-request-field("advanced")) 
+    then 
+        let $order := fn:replace(fn:substring-after(fn:tokenize(xdmp:get-request-field("q","sort:relevance")," ")[fn:contains(.,"sort")],"sort:"),"[()]","")
+        return 
+            if(fn:string-length($order) lt 1)
+            then "relevance"
+            else $order
+    else if(xdmp:get-request-field("submitbtn") or not(xdmp:get-request-field("sortby")))
+    then 
+        let $order := fn:replace(fn:substring-after(fn:tokenize(xdmp:get-request-field("q","sort:newest")," ")[fn:contains(.,"sort")],"sort:"),"[()]","")
+        return 
+            if(fn:string-length($order) lt 1)
+            then "relevance"
+            else $order
+    else xdmp:get-request-field("sortby")
+};
+
+(: builds the sort drop-down with appropriate option selected :)
+declare function local:sort-options(){
+    let $sortby := local:sort-controller()
+    let $sort-options := 
+            <options>
+                <option value="relevance">relevance</option>   
+                <option value="newest">newest</option>
+                <option value="oldest">oldest</option>
+                <option value="author">author</option>
+                <option value="title">title</option>
+            </options>
+    let $newsortoptions := 
+        for $option in $sort-options/*
+        return 
+            element {fn:node-name($option)}
+            {
+                $option/@*,
+                if($sortby eq $option/@value)
+                then attribute selected {"true"}
+                else (),
+                $option/node()
+            }
+    return 
+        <div id="sortbydiv">
+             sort by: 
+                <select name="sortby" id="sortby" onchange='this.form.submit()'>
+                     {$newsortoptions}
+                </select>
+        </div>
+};
+
+
+declare function local:search-results(){
+    let $q := local:add-sort(xdmp:get-request-field("q"))
 	let $results :=
 		for $magazine in search:search($q, $options)/search:result
+		let $uri := fn:data($magazine//@uri)
+		let $magazine-doc := fn:doc($uri)
 		return 
 		  <div>
-			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[1]/LastName/text()}</div>
-			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
-			 <div class="abstract">{fn:tokenize($magazine//Abstract, " ") [1 to 70]} ...&#160;
-				<a href="index.xqy?uri={xdmp:url-encode($magazine/@uri)}">[more]</a>
+			 <div class="magazine">"{$magazine-doc//Title/text()}" by {$magazine-doc//Author[1]/LastName/text()}</div>
+			 <div class="date"> Publish Date: {fn:data($magazine-doc//PubDate/Year)}</div>    
+			 <div class="abstract">{local:desc($magazine)}&#160;
+				<a href="index.xqy?uri={xdmp:url-encode($uri)}">[more]</a>
 			 </div>
 		  </div>
 	return 
 		if($results) 
-		then $results
+		then (local:sort-options(), $results)
 		else <div>Sorry, no  results  for your search.<br/><br/><br/></div>
 };
 
-declare function local:default-results()
-{
+declare function local:desc($magazine){
+	for $text in $magazine/search:snippet/search:match/node()
+		return
+	if(fn:node-name($text) eq xs:QName("search:highlight"))
+	then <span id="highlight">{$text/text()}</span>
+	else $text
+};
+
+declare function local:default-results(){
 	(for $magazine in /PubmedArticle 		 
 		return (<div>
 			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[1]/LastName/text()}</div>
@@ -46,8 +165,7 @@ declare function local:default-results()
 	)[1 to 10]
 };
 
-declare function local:magazine-detail()
-{
+declare function local:magazine-detail(){
 	let $uri := xdmp:get-request-field("uri")
 	let $magazine := fn:doc($uri) 
 	return <div>
@@ -88,7 +206,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
         </div>
         <div class="w-100 mx-auto col-8">
           <form class="form-inline my-2 my-lg-0" name="search" method="get" action="index.xqy" id="search">
-              <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search"/>
+              <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
               <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </form>
 

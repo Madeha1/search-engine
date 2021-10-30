@@ -42,6 +42,10 @@ p{
 	font-size: 15px;
 }
 
+#highlight {
+	background-color: #C8DB6F;
+}
+
 /* 
 body {
 	background-color: #666;
