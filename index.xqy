@@ -8,8 +8,6 @@ declare variable $options :=
 			<element name="Abstract"/>
 		</preferred-elements>
 	</transform-results>
-
-	(: sort :)
 	<search:operator name="sort">
 		<search:state name="relevance">
 			<search:sort-order direction="descending">
@@ -17,16 +15,16 @@ declare variable $options :=
 			</search:sort-order>
 		</search:state>
 		<search:state name="newest">
-			<search:sort-order direction="descending" type="xs:date">
-                <path-index>PubmedArticle//PubDate/Year</path-index>
+			<search:sort-order direction="descending" type="xs:gYear">
+        <field name="PubDate"/>
 			</search:sort-order>
 			<search:sort-order>
 				<search:score/>
 			</search:sort-order>
 		</search:state>
 		<search:state name="oldest">
-			<search:sort-order direction="ascending" type="xs:date">
-                <path-index>/PubmedArticle//PubDate/Year</path-index>
+			<search:sort-order direction="ascending" type="xs:gYear">
+        <field name="PubDate"/>
 			</search:sort-order>
 			<search:sort-order>
 				<search:score/>

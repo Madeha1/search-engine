@@ -1,0 +1,19 @@
+NOSQL Project
+database: magazines
+forect: magazines-01
+xdbc 8050
+mlcp to upload files
+create http app server 8051
+searchable field: searchable
+lab 11
+lab12: add weight-> word query for Title -> 3.0
+lab14: 
+highlight and snippet, index for title, path index for year'
+sorting almmost ready.
+created field called "PubDate" on root and this path:  "/PubmedArticle//PubDate/Year"
+creted a field range index on gYear for the field created
+
+Questions:
+which author? [still working on the first one:)]
+path index for year didn't work for search options so created a field (why didn't work? cause the new search api doesn't support it).
+
