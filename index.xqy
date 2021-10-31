@@ -44,13 +44,9 @@ declare variable $options :=
   </options>;
 
 declare function local:result-controller() {
-	if(xdmp:get-request-field("q"))
-	then local:search-results()
-	(: when click More button :)
-	else if(xdmp:get-request-field("uri"))
+	if(xdmp:get-request-field("uri"))
 	then local:magazine-detail()  
-	(: No search or more :)
-	else local:default-results()
+	else local:search-results()
 };
 
 
@@ -125,10 +121,62 @@ declare function local:sort-options(){
 };
 
 
+declare function local:pagination($resultspag)
+{
+    let $start := xs:unsignedLong($resultspag/@start)
+    let $length := xs:unsignedLong($resultspag/@page-length)
+    let $total := xs:unsignedLong($resultspag/@total)
+    let $last := xs:unsignedLong($start + $length -1)
+    let $end := if ($total > $last) then $last else $total
+    let $qtext := $resultspag/search:qtext[1]/text()
+    let $next := if ($total > $last) then $last + 1 else ()
+    let $previous := if (($start > 1) and ($start - $length > 0)) then fn:max((($start - $length),1)) else ()
+    let $next-href := 
+         if ($next) 
+         then fn:concat("/index.xqy?q=",if ($qtext) then fn:encode-for-uri($qtext) else (),"&amp;start=",$next,"&amp;submitbtn=page")
+         else ()
+    let $previous-href := 
+         if ($previous)
+         then fn:concat("/index.xqy?q=",if ($qtext) then fn:encode-for-uri($qtext) else (),"&amp;start=",$previous,"&amp;submitbtn=page")
+         else ()
+    let $total-pages := fn:ceiling($total div $length)
+    let $currpage := fn:ceiling($start div $length)
+    let $pagemin := 
+        fn:min(for $i in (1 to 4)
+        where ($currpage - $i) > 0
+        return $currpage - $i)
+    let $rangestart := fn:max(($pagemin, 1))
+    let $rangeend := fn:min(($total-pages,$rangestart + 4))
+    
+    return (
+        <div id="countdiv"><b>{$start}</b> to <b>{$end}</b> of {$total}</div>,
+        local:sort-options(),
+        if($rangestart eq $rangeend)
+        then ()
+        else
+            <div id="pagenumdiv"> 
+               { if ($previous) then <a href="{$previous-href}" title="View previous {$length} results"><img src="images/prevarrow.gif" class="imgbaseline"  border="0" /></a> else () }
+               {
+                 for $i in ($rangestart to $rangeend)
+                 let $page-start := (($length * $i) + 1) - $length
+                 let $page-href := concat("/index.xqy?q=",if ($qtext) then encode-for-uri($qtext) else (),"&amp;start=",$page-start,"&amp;submitbtn=page")
+                 return 
+                    if ($i eq $currpage) 
+                    then <b>&#160;<u>{$i}</u>&#160;</b>
+                    else <span class="hspace">&#160;<a href="{$page-href}">{$i}</a>&#160;</span>
+                }
+               { if ($next) then <a href="{$next-href}" title="View next {$length} results"><img src="images/nextarrow.gif" class="imgbaseline" border="0" /></a> else ()}
+            </div>
+    )
+};
+
 declare function local:search-results(){
-    let $q := local:add-sort(xdmp:get-request-field("q"))
-	let $results :=
-		for $magazine in search:search($q, $options)/search:result
+
+	let $start :=xs:unsignedLong(xdmp:get-request-field("start"))
+    let $q := local:add-sort(xdmp:get-request-field("q", "sort:newest"))
+	let $results := search:search($q, $options, $start)
+	let $items :=
+		for $magazine in $results/search:result
 		let $uri := fn:data($magazine//@uri)
 		let $magazine-doc := fn:doc($uri)
 		return 
@@ -140,8 +188,8 @@ declare function local:search-results(){
 			 </div>
 		  </div>
 	return 
-		if($results) 
-		then (local:sort-options(), $results)
+		if($items) 
+		then (local:pagination($results), $items)
 		else <div>Sorry, no  results  for your search.<br/><br/><br/></div>
 };
 
@@ -152,7 +200,7 @@ declare function local:desc($magazine){
 	then <span id="highlight">{$text/text()}</span>
 	else $text
 };
-
+(: 
 declare function local:default-results(){
 	(for $magazine in /PubmedArticle 		 
 		return (<div>
@@ -163,7 +211,7 @@ declare function local:default-results(){
 			</div>
 			</div>)	   	
 	)[1 to 10]
-};
+}; :)
 
 declare function local:magazine-detail(){
 	let $uri := xdmp:get-request-field("uri")
@@ -205,7 +253,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
           <p>Facet Content Here</p> 
         </div>
         <div class="w-100 mx-auto col-8">
-          <form class="form-inline my-2 my-lg-0" name="search" method="get" action="index.xqy" id="search">
+          <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
               <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
               <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </form>

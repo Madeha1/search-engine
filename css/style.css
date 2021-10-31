@@ -46,32 +46,10 @@ p{
 	background-color: #C8DB6F;
 }
 
-/* 
-body {
-	background-color: #666;
-	font-family: Verdana, Geneva, sans-serif;
-	font-size: 11px;
-	line-height: 150%;
-	color: #333;
-	padding-top: 20px;
-}
-form {
-	display: inline;
+#pagenumdiv {
+	text-align: right;
 }
 
-a {
-	color: #333;
-}
-
-#wrapper {
-	background-color: #FFF;
-	width: 940px;
-	padding-top: 12px;
-	padding-right: 10px;
-	padding-bottom: 0px;
-	padding-left: 10px;
-	margin: auto;
-}
 
 #header {
 	background-color: #56488C;
@@ -223,12 +201,12 @@ a {
 .facet-hidden {
     display: none;
 }
-.facet-toggle {
-}
+
+
 .facet-toggle-hidden {
   display: none;
 }
 
 .padleft {
 	padding-left: 8px;
-} */
+}
