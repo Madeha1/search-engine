@@ -254,13 +254,14 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
         </div>
         <div class="w-100 mx-auto col-8">
           <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
-              <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
-              <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
+			      <div id="searchdiv">
+				      <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
+				      <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
+			      </div>
+		        <div id="detaildiv">
+			        {  local:result-controller()  }  	
+	  	      </div>
           </form>
-
-		  <div id="detaildiv">
-			{  local:result-controller()  }  	
-	  	  </div>
         </div>
 	  </div>
     </div>  
