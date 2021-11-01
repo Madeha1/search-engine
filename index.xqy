@@ -3,7 +3,7 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
-
+  (: facits :)
   <constraint name="PubDate">
     <range type="xs:gYear">
       <bucket ge="2010" name="2010s">2010s</bucket>
@@ -19,7 +19,6 @@ declare variable $options :=
       <facet-option>limit=10</facet-option>
     </range>
   </constraint>
-
   <constraint name="PublicationType">
     <range type="xs:string" collation="http://marklogic.com/collation/en/S1/AS/T00BB">
      <element name="PublicationType"/>
@@ -28,7 +27,7 @@ declare variable $options :=
      <facet-option>descending</facet-option>
     </range>
   </constraint> 
-
+  (: sort :)
 	<transform-results apply="snippet">
 		<preferred-elements>
 			<element name="Abstract"/>
@@ -120,7 +119,6 @@ declare function local:sort-options(){
                 <option value="relevance">relevance</option>   
                 <option value="newest">newest</option>
                 <option value="oldest">oldest</option>
-                <option value="author">author</option>
                 <option value="title">title</option>
             </options>
     let $newsortoptions := 
@@ -204,7 +202,12 @@ declare function local:search-results(){
 		let $magazine-doc := fn:doc($uri)
 		return 
 		  <div>
-			 <div class="magazine">"{$magazine-doc//Title/text()}" by {$magazine-doc//Author[1]/LastName/text()}</div>
+			 <div class="magazine">"{$magazine-doc//Title/text()}"</div>
+       <div class="authors">
+          {for $authors in $magazine-doc//Author 
+          return <span >{$authors/LastName/text()}, </span>
+          }
+        </div>
 			 <div class="date"> Publish Date: {fn:data($magazine-doc//PubDate/Year)}</div>    
 			 <div class="abstract">{local:desc($magazine)}&#160;
 				<a href="index.xqy?uri={xdmp:url-encode($uri)}">[more]</a>
@@ -230,7 +233,11 @@ declare function local:magazine-detail(){
 	return <div>
 		<div class="magazine-large">"{$magazine//Title/text()}"</div>
 		<div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
-		{if ($magazine//Author[1]/LastName/text()) then <div class="detailitem">Author: {$magazine//Author[1]/LastName/text()}</div> else ()}
+    <div class="authors">
+          {for $authors in $magazine//Author 
+          return <span >{$authors/LastName/text()}, </span>
+          }
+    </div>
 		{if ($magazine//Abstract) then <div class="detailitem">{$magazine//Abstract}</div> else ()}
 		</div>
 };

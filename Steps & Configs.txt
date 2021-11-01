@@ -17,6 +17,8 @@ lab15:
 add element range index for "PublicationType" and made collation english, first oprion and (whitespace and char)
 add facits on PublicationType and year as dicades.
 
+*display all authors
+
 Questions:
 which author? [still working on the first one:)]
 path index for year didn't work for search options so created a field (why didn't work? cause the new search api doesn't support it).
