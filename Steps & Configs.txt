@@ -13,7 +13,10 @@ sorting almmost ready.
 created field called "PubDate" on root and this path:  "/PubmedArticle//PubDate/Year"
 creted a field range index on gYear for the field created
 
+lab15:
+add element range index for "PublicationType" and made collation english, first oprion and (whitespace and char)
+add facits on PublicationType and year as dicades.
+
 Questions:
 which author? [still working on the first one:)]
 path index for year didn't work for search options so created a field (why didn't work? cause the new search api doesn't support it).
-

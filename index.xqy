@@ -3,6 +3,32 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
+
+  <constraint name="PubDate">
+    <range type="xs:gYear">
+      <bucket ge="2010" name="2010s">2010s</bucket>
+      <bucket lt="2010" ge="2000" name="2000s">2000s</bucket>
+      <bucket lt="2000" ge="1990" name="1990s">1990s</bucket>
+      <bucket lt="1990" ge="1980" name="1980s">1980s</bucket>
+      <bucket lt="1980" ge="1970" name="1970s">1970s</bucket>
+      <bucket lt="1970" ge="1960" name="1960s">1960s</bucket>
+      <bucket lt="1960" ge="1950" name="1950s">1950s</bucket>
+      <bucket lt="1950" name="1940s">1940s</bucket>
+      <attribute ns="" name="last"/>
+      <field name="PubDate"/>
+      <facet-option>limit=10</facet-option>
+    </range>
+  </constraint>
+
+  <constraint name="PublicationType">
+    <range type="xs:string" collation="http://marklogic.com/collation/en/S1/AS/T00BB">
+     <element name="PublicationType"/>
+     <facet-option>limit=20</facet-option>
+     <facet-option>frequency-order</facet-option>
+     <facet-option>descending</facet-option>
+    </range>
+  </constraint> 
+
 	<transform-results apply="snippet">
 		<preferred-elements>
 			<element name="Abstract"/>
@@ -41,6 +67,12 @@ declare variable $options :=
 	</search:operator>
   </options>;
 
+  declare variable $facet-size as xs:integer := 8;
+  declare variable $results :=  let $q := xdmp:get-request-field("q", "sort:newest")
+                              let $q := local:add-sort($q)
+                              return  search:search($q, $options, xs:unsignedLong(xdmp:get-request-field("start","1")));
+
+
 declare function local:result-controller() {
 	if(xdmp:get-request-field("uri"))
 	then local:magazine-detail()  
@@ -68,16 +100,9 @@ declare function local:add-sort($q){
         else $q
 }; 
 
-(: determines if the end-user set the sort through the drop-down or through editing the search text field or came from the advanced search form :)
+(: determines if the end-user set the sort through the drop-down or through editing the search text field:)
 declare function local:sort-controller(){
-    if(xdmp:get-request-field("advanced")) 
-    then 
-        let $order := fn:replace(fn:substring-after(fn:tokenize(xdmp:get-request-field("q","sort:relevance")," ")[fn:contains(.,"sort")],"sort:"),"[()]","")
-        return 
-            if(fn:string-length($order) lt 1)
-            then "relevance"
-            else $order
-    else if(xdmp:get-request-field("submitbtn") or not(xdmp:get-request-field("sortby")))
+    if(xdmp:get-request-field("submitbtn") or not(xdmp:get-request-field("sortby")))
     then 
         let $order := fn:replace(fn:substring-after(fn:tokenize(xdmp:get-request-field("q","sort:newest")," ")[fn:contains(.,"sort")],"sort:"),"[()]","")
         return 
@@ -198,18 +223,6 @@ declare function local:desc($magazine){
 	then <span id="highlight">{$text/text()}</span>
 	else $text
 };
-(: 
-declare function local:default-results(){
-	(for $magazine in /PubmedArticle 		 
-		return (<div>
-			 <div class="magazine">"{$magazine//Title/text()}" by {$magazine//Author[1]/LastName/text()}</div>
-			 <div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
-			 <div class="abstract">{fn:tokenize($magazine//Abstract, " ") [1 to 70]} ...&#160;
-				<a href="index.xqy?uri={xdmp:url-encode($magazine/@uri)}">[more]</a>
-			</div>
-			</div>)	   	
-	)[1 to 10]
-}; :)
 
 declare function local:magazine-detail(){
 	let $uri := xdmp:get-request-field("uri")
@@ -222,6 +235,59 @@ declare function local:magazine-detail(){
 		</div>
 };
 
+(: start facet function :)
+declare function local:facets()
+{
+    for $facet in $results/search:facet
+    let $facet-count := fn:count($facet/search:facet-value)
+    let $facet-name := fn:data($facet/@name)
+    return
+        if($facet-count > 0)
+        then <div class="facet">
+                <div class="purplesubheading"><img src="images/checkblank.gif"/>{$facet-name}</div>
+                {
+                    let $facet-items :=
+                        for $val in $facet/search:facet-value
+                        let $print := if($val/text()) then $val/text() else "Unknown"
+                        let $qtext := ($results/search:qtext)
+                        let $sort := local:get-sort($qtext)
+                        let $this :=
+                            if (fn:matches($val/@name/string(),"\W"))
+                            then fn:concat('"',$val/@name/string(),'"')
+                            else if ($val/@name eq "") then '""'
+                            else $val/@name/string()
+                        let $this := fn:concat($facet/@name,':',$this)
+                        let $selected := fn:matches($qtext,$this,"i")
+                        let $icon := 
+                            if($selected)
+                            then <img src="images/checkmark.gif"/>
+                            else <img src="images/checkblank.gif"/>
+                        let $link := 
+                            if($selected)
+                            then search:remove-constraint($qtext,$this,$options)
+                            else if(string-length($qtext) gt 0)
+                            then fn:concat("(",$qtext,")"," AND ",$this)
+                            else $this
+                        let $link := if($sort and fn:not(local:get-sort($link))) then fn:concat($link," ",$sort) else $link
+                        let $link := fn:encode-for-uri($link)
+                        return
+                            <div class="facet-value">{$icon}<a href="index.xqy?q={$link}">
+                            {fn:lower-case($print)}</a> [{fn:data($val/@count)}]</div>
+                     return (
+                                <div>{$facet-items[1 to $facet-size]}</div>,
+                                if($facet-count gt $facet-size)
+                                then (
+									<div class="facet-hidden" id="{$facet-name}">{$facet-items[position() gt $facet-size]}</div>,
+									<div class="facet-toggle" id="{$facet-name}_more"><img src="images/checkblank.gif"/><a href="javascript:toggle('{$facet-name}');" class="white">more...</a></div>,
+									<div class="facet-toggle-hidden" id="{$facet-name}_less"><img src="images/checkblank.gif"/><a href="javascript:toggle('{$facet-name}');" class="white">less...</a></div>
+								)                                 
+                                else ()   
+                            )
+                }          
+            </div>
+         else <div>&#160;</div>
+};
+(: end facet function :)
 
 xdmp:set-response-content-type("text/html; charset=utf-8"),
 '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">',
@@ -230,6 +296,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 	<title>Pub Med</title>
 	<link href="css/style.css" rel="stylesheet" type="text/css"/>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
+  <script src="js/magazine.js" type="text/javascript"/>
   </head>
   <body>
     <div class="container-0">
@@ -249,6 +316,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
       <div class ="row py-4">
         <div class="col-4 text-center">
           <p>Facet Content Here</p> 
+            <img src="images/checkblank.gif"/>{local:facets()}
         </div>
         <div class="w-100 mx-auto col-8">
           <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
