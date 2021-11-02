@@ -103,6 +103,7 @@ declare function local:add-sort($q){
 declare function local:sort-controller(){
     if(xdmp:get-request-field("submitbtn") or not(xdmp:get-request-field("sortby")))
     then 
+    (: gets the word after sort and ignors the words befor it :)
         let $order := fn:replace(fn:substring-after(fn:tokenize(xdmp:get-request-field("q","sort:newest")," ")[fn:contains(.,"sort")],"sort:"),"[()]","")
         return 
             if(fn:string-length($order) lt 1)
@@ -133,7 +134,7 @@ declare function local:sort-options(){
                 $option/node()
             }
     return 
-        <div id="sortbydiv">
+        <div id="sortbydiv" style="text-align: left">
              sort by: 
                 <select name="sortby" id="sortby" onchange='this.form.submit()'>
                      {$newsortoptions}
@@ -144,7 +145,8 @@ declare function local:sort-options(){
 
 declare function local:pagination($resultspag)
 {
-    let $start := xs:unsignedLong($resultspag/@start)
+  (: from search result <search:response> :)
+    let $start := xs:unsignedLong($resultspag/@start) 
     let $length := xs:unsignedLong($resultspag/@page-length)
     let $total := xs:unsignedLong($resultspag/@total)
     let $last := xs:unsignedLong($start + $length -1)
@@ -170,12 +172,11 @@ declare function local:pagination($resultspag)
     let $rangeend := fn:min(($total-pages,$rangestart + 4))
     
     return (
-        <div id="countdiv"><b>{$start}</b> to <b>{$end}</b> of {$total}</div>,
-        local:sort-options(),
+        <div id="countdiv" style="text-align: left"><b>{$start}</b> to <b>{$end}</b> of {$total}</div>,
         if($rangestart eq $rangeend)
         then ()
         else
-            <div id="pagenumdiv"> 
+            <div id="pagenumdiv" style="text-align: left"> 
                { if ($previous) then <a href="{$previous-href}" title="View previous {$length} results"><img src="images/prevarrow.gif" class="imgbaseline"  border="0" /></a> else () }
                {
                  for $i in ($rangestart to $rangeend)
@@ -335,6 +336,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
             <input class="form-control w-1600 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </div>
+                  {local:sort-options()}
           <div id="detaildiv">
             {  local:result-controller()  }  	
           </div>
