@@ -301,43 +301,58 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Pub Med</title>
-	<link href="css/style.css" rel="stylesheet" type="text/css"/>
+	<link href="css\style.css" rel="stylesheet" type="text/css"/>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
-  <script src="js/magazine.js" type="text/javascript"/>
-  </head>
-  <body>
-    <div class="container-0">
-      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand px-4 py-2" href="#">Magazine</a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="#">Home</a>
-            </li>
-            <li class="nav-item active">
-              <a class="nav-link" href="#">About</a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-      <div class ="row py-4">
-        <div class="col-4 text-center">
-          <p>Facet Content Here</p> 
-            <img src="images/checkblank.gif"/>{local:facets()}
-        </div>
-        <div class="w-100 mx-auto col-8">
-          <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
-			      <div id="searchdiv">
-				      <input class="form-control w-50 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
-				      <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
-			      </div>
-		        <div id="detaildiv">
-			        {  local:result-controller()  }  	
-	  	      </div>
-          </form>
-        </div>
-	  </div>
-    </div>  
-	<div id="footer"></div>
-	</body>
+  <script src="js\magazine.js" type="text/javascript"/>
+</head>
+<body>
+  <div class="container-0">
+    <nav class="navbar-expand-lg navbar navbar-light" style="background-color: #e3f2fd">
+      <a class="navbar-brand px-4 py-2" href="http://localhost:8051">Magazine</a>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="http://localhost:8051">Home</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">About</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div>
+      <br/>
+    </div>
+    <div class ="row">
+      <div class="col-4 text-left">
+        <p class="text-center">Facet Content Here</p> 
+          <img src="images/checkblank.gif"/>{local:facets()}
+      </div>
+      <div class="col-8">
+        <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
+          <div id="searchdiv">
+            <input class="form-control w-1600 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
+          </div>
+          <div id="detaildiv">
+            {  local:result-controller()  }  	
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer font-small blue">
+
+    <!-- Copyright -->
+    <div class="footer-copyright text-center py-3">© 2021 Copyright:
+      <a href="#"> Magazine.com</a>
+    </div>
+    <!-- Copyright -->
+
+  </footer>
+  <!-- Footer -->  
+</body>
 </html>
