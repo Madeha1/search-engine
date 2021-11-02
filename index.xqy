@@ -135,7 +135,7 @@ declare function local:sort-options(){
     return 
         <div>
              &#160;&#160; sort by: 
-                <select name="sortby" onchange='this.form.submit()' class="form-select" aria-label="Default select example">
+                <select class="form-select" aria-label="Default select example" name="sortby" onchange='this.form.submit()'>
                      {$newsortoptions}
                 </select>
         </div>
@@ -171,7 +171,7 @@ declare function local:pagination($resultspag)
     let $rangeend := fn:min(($total-pages,$rangestart + 4))
     
     return (
-        <div id="countdiv" style="text-align: left"><b>{$start}</b> to <b>{$end}</b> of {$total}</div>,
+        <div id="countdiv" style="text-align: right"><b>{$start}</b> to <b>{$end}</b> of {$total}</div>,
         if($rangestart eq $rangeend)
         then ()
         else
@@ -336,10 +336,10 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
             <button class="btn btn-outline-dark" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </div>
             {local:sort-options()}
+        </form>
           <div id="detaildiv">
             { local:result-controller() }  	
           </div>
-        </form>
       </div>
     </div>
   </div>
