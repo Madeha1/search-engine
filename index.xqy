@@ -14,7 +14,6 @@ declare variable $options :=
       <bucket lt="1970" ge="1960" name="1960s">1960s</bucket>
       <bucket lt="1960" ge="1950" name="1950s">1950s</bucket>
       <bucket lt="1950" name="1940s">1940s</bucket>
-      <attribute ns="" name="last"/>
       <field name="PubDate"/>
       <facet-option>limit=10</facet-option>
     </range>
@@ -134,9 +133,9 @@ declare function local:sort-options(){
                 $option/node()
             }
     return 
-        <div id="sortbydiv" style="text-align: left">
-             sort by: 
-                <select name="sortby" id="sortby" onchange='this.form.submit()'>
+        <div>
+             &#160;&#160; sort by: 
+                <select name="sortby" onchange='this.form.submit()' class="form-select" aria-label="Default select example">
                      {$newsortoptions}
                 </select>
         </div>
@@ -302,8 +301,8 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Pub Med</title>
-	<link href="css\style.css" rel="stylesheet" type="text/css"/>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
+  <link href="css\style.css" rel="stylesheet"/>
   <script src="js\magazine.js" type="text/javascript"/>
 </head>
 <body>
@@ -334,11 +333,11 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
         <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
           <div id="searchdiv">
             <input class="form-control w-1600 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
+            <button class="btn btn-outline-dark" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </div>
-                  {local:sort-options()}
+            {local:sort-options()}
           <div id="detaildiv">
-            {  local:result-controller()  }  	
+            { local:result-controller() }  	
           </div>
         </form>
       </div>
