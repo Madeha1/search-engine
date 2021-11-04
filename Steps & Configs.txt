@@ -19,6 +19,9 @@ add facits on PublicationType and year as dicades.
 
 *display all authors
 
+change to Title articalTitle in the code and configs
+exclude the refrence list form word-query
+
 Questions:
 which author? [still working on the first one:)]
 path index for year didn't work for search options so created a field (why didn't work? cause the new search api doesn't support it).

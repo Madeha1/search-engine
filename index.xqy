@@ -3,10 +3,28 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
+  (: search on specific element :)
+ <constraint name="articalTitle">
+    <container>
+      <element name="ArticleTitle"/>
+    </container>
+  </constraint>
+  <constraint name="author">
+    <container>
+      <element name="LastName"/>
+    </container>
+  </constraint>
+  (:auto complete:)
+   <default-suggestion-source>
+    <range type="xs:string">
+      <element name="Title"/>
+   </range>
+  </default-suggestion-source> 
   (: facits :)
   <constraint name="PubDate">
     <range type="xs:gYear">
-      <bucket ge="2010" name="2010s">2010s</bucket>
+      <bucket ge="2020" name="2020s">2020s</bucket>
+      <bucket lt="2020" ge="2010" name="2010s">2010s</bucket>
       <bucket lt="2010" ge="2000" name="2000s">2000s</bucket>
       <bucket lt="2000" ge="1990" name="1990s">1990s</bucket>
       <bucket lt="1990" ge="1980" name="1980s">1980s</bucket>
@@ -56,7 +74,7 @@ declare variable $options :=
 		</search:state>
 		<search:state name="title">
 			<search:sort-order direction="ascending" type="xs:string">
-				<search:element  name="Title"/>
+				<search:element  name="ArticleTitle"/>
 			</search:sort-order>
 			<search:sort-order>
 				<search:score/>
@@ -77,6 +95,39 @@ declare function local:result-controller() {
 	else local:search-results()
 };
 
+(: builds the search drop-down with appropriate option selected :)
+declare function local:search-by-options(){
+    let $searchby := local:search-by-controller()
+    let $search-options := 
+            <options>
+                <option value="all">All</option>   
+                <option value="articalTitle">Title</option>
+                <option value="author">Author</option>
+
+            </options>
+    let $newsearchoptions := 
+        for $option in $search-options/*
+        return 
+            element {fn:node-name($option)}
+            {
+                $option/@*,
+                if($searchby eq $option/@value)
+                then attribute selected {"true"}
+                else (),
+                $option/node()
+            }
+    return 
+        <div>
+             &#160;&#160; Search by: 
+                <select class="form-select" aria-label="Default select example" name="searchby" onchange='this.form.submit()'>
+                     {$newsearchoptions}
+                </select>
+        </div>
+};
+
+declare function local:search-by-controller(){
+    xdmp:get-request-field("searchby")
+};
 
 (: gets the current sort argument from the query string :)
 declare function local:get-sort($q){
@@ -202,7 +253,7 @@ declare function local:search-results(){
 		let $magazine-doc := fn:doc($uri)
 		return 
 		  <div>
-			 <div class="magazine">"{$magazine-doc//Title/text()}"</div>
+			 <div class="magazine">"{$magazine-doc//ArticleTitle/text()}"</div>
        <div class="authors">
           {for $authors in $magazine-doc//Author 
           return <span >{$authors/LastName/text()}, </span>
@@ -231,7 +282,7 @@ declare function local:magazine-detail(){
 	let $uri := xdmp:get-request-field("uri")
 	let $magazine := fn:doc($uri) 
 	return <div>
-		<div class="magazine-large">"{$magazine//Title/text()}"</div>
+		<div class="magazine-large">"{$magazine//ArticleTitle/text()}"</div>
 		<div class="date"> Publish Date: {fn:data($magazine//PubDate/Year)}</div>    
     <div class="authors">
           {for $authors in $magazine//Author 
@@ -336,6 +387,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
             <button class="btn btn-outline-dark" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </div>
             {local:sort-options()}
+            {local:search-by-options()}
         </form>
           <div id="detaildiv">
             { local:result-controller() }  	
