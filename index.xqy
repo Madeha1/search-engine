@@ -3,6 +3,12 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
+  (: search suggestion on title :)
+    <default-suggestion-source>
+      <range type="xs:string">
+        <element name="articalTitle"/>
+      </range>
+    </default-suggestion-source> 
   (: search on specific element :)
  <constraint name="articalTitle">
     <container>
@@ -17,7 +23,7 @@ declare variable $options :=
   (:auto complete:)
    <default-suggestion-source>
     <range type="xs:string">
-      <element name="Title"/>
+      <element name="articalTitle"/>
    </range>
   </default-suggestion-source> 
   (: facits :)
@@ -105,7 +111,7 @@ declare function local:search-by-options(){
                 <option value="author">Author</option>
 
             </options>
-    let $newsearchoptions := 
+    let $newSearchOptions := 
         for $option in $search-options/*
         return 
             element {fn:node-name($option)}
@@ -120,9 +126,10 @@ declare function local:search-by-options(){
         <div>
              &#160;&#160; Search by: 
                 <select class="form-select" aria-label="Default select example" name="searchby" onchange='this.form.submit()'>
-                     {$newsearchoptions}
+                     {$newSearchOptions}
                 </select>
         </div>
+
 };
 
 declare function local:search-by-controller(){
@@ -243,9 +250,18 @@ declare function local:pagination($resultspag)
 };
 
 declare function local:search-results(){
-
+  let $searchby := xdmp:get-request-field("searchby")
+  let $q2 := 
+  if ($searchby eq 'author')
+  then 'author'
+  else if ($searchby eq 'articalTitle')
+  then 'articalTitle'
+  else ''
 	let $start :=xs:unsignedLong(xdmp:get-request-field("start"))
     let $q := local:add-sort(xdmp:get-request-field("q", "sort:newest"))
+    let $q := if($q2 ne '') then
+      fn:concat($q2,":", $q)
+      else $q
 	let $results := search:search($q, $options, $start)
 	let $items :=
 		for $magazine in $results/search:result
@@ -354,7 +370,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 	<title>Pub Med</title>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
   <link href="css\style.css" rel="stylesheet"/>
-  <script src="js\magazine.js" type="text/javascript"/>
+
 </head>
 <body>
   <div class="container-0">
@@ -383,7 +399,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
       <div class="col-8">
         <form class="form-inline my-2 my-lg-0" name="form1" method="get" action="index.xqy" id="form1">
           <div id="searchdiv">
-            <input class="form-control w-1600 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
+            <input autocomplete="off" class="form-control w-1600 mr-sm-2" type="text" name="q" id="q" placeholder="Search" value="{local:add-sort(xdmp:get-request-field("q"))}"/>
             <button class="btn btn-outline-dark" type="submit" id="submitbtn" name="submitbtn" value="search">Search</button>
           </div>
             {local:sort-options()}
