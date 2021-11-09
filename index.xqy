@@ -3,12 +3,7 @@ import module namespace search = "http://marklogic.com/appservices/search" at "/
 
 declare variable $options := 
   <options xmlns="http://marklogic.com/appservices/search">
-  (: search suggestion on title :)
-    <default-suggestion-source>
-      <range type="xs:string">
-        <element name="articalTitle"/>
-      </range>
-    </default-suggestion-source> 
+
   (: search on specific element :)
  <constraint name="articalTitle">
     <container>
@@ -49,13 +44,14 @@ declare variable $options :=
      <facet-option>frequency-order</facet-option>
      <facet-option>descending</facet-option>
     </range>
-  </constraint> 
-  (: sort :)
+  </constraint>
+    (: Snippet :)
 	<transform-results apply="snippet">
 		<preferred-elements>
 			<element name="Abstract"/>
 		</preferred-elements>
 	</transform-results>
+    (: sort :)
 	<search:operator name="sort">
 		<search:state name="relevance">
 			<search:sort-order direction="descending">
@@ -370,7 +366,10 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 	<title>Pub Med</title>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
   <link href="css\style.css" rel="stylesheet"/>
-
+  <script type="text/javascript" src="/autocomplete/lib/prototype/prototype.js"></script> 
+  <script type="text/javascript" src="/autocomplete/lib/scriptaculous/scriptaculous.js"></script> 
+  <script type="text/javascript" src="/autocomplete/src/AutoComplete.js"></script>
+  <script type="text/javascript" src="/autocomplete/src/lib.js"></script>
 </head>
 <body>
   <div class="container-0">

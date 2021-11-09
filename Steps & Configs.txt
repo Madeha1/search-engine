@@ -1,4 +1,9 @@
 NOSQL Project
+
+Team members:
+Shahd Madhoun
+Madeha Tahboub
+
 database: magazines
 forect: magazines-01
 xdbc 8050
@@ -21,6 +26,8 @@ add facits on PublicationType and year as dicades.
 
 change to Title articalTitle in the code and configs
 exclude the refrence list form word-query
+
+field -> "searchable" + field range index.
 
 Questions:
 which author? [still working on the first one:)]
