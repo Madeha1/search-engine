@@ -366,6 +366,7 @@ xdmp:set-response-content-type("text/html; charset=utf-8"),
 	<title>Pub Med</title>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>  
   <link href="css\style.css" rel="stylesheet"/>
+  <script type="" src="/js/magazine.js"></script> 
   <script type="text/javascript" src="/autocomplete/lib/prototype/prototype.js"></script> 
   <script type="text/javascript" src="/autocomplete/lib/scriptaculous/scriptaculous.js"></script> 
   <script type="text/javascript" src="/autocomplete/src/AutoComplete.js"></script>
